@@ -1,25 +1,3 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-from distutils.core import setup
-import os
-import errno
-import subprocess
-import sys
-
-
-def mkdir_p(path):
-    '''Make a directory including parent directories.
-    '''
-    try:
-        os.makedirs(path)
-    except os.error as exc:
-        if exc.errno != errno.EEXIST or not os.path.isdir(path):
-            raise
-
-
-print("Configuring...")
-mkdir_p('cmake_build')
 cmake_command = ['cmake', '../opensfm/src']
 if sys.version_info >= (3, 0):
     cmake_command.extend([
@@ -28,9 +6,6 @@ if sys.version_info >= (3, 0):
             sys.version_info.major,
             sys.version_info.minor)])
 subprocess.Popen(cmake_command, cwd='cmake_build').wait()
-
-print("Compiling extension...")
-subprocess.Popen(['make', '-j4'], cwd='cmake_build').wait()
 
 print("Building package")
 setup(

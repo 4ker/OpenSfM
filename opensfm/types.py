@@ -29,6 +29,14 @@ class Pose(object):
     @rotation.setter
     def rotation(self, value):
         self._rotation = np.asarray(value, dtype=float)
+#       https://stackoverflow.com/questions/14415741/numpy-array-vs-asarray
+#    The definition of asarray is:
+#    
+#    def asarray(a, dtype=None, order=None):
+#        return array(a, dtype, copy=False, order=order)
+#    So it is like array, except it has fewer options, and copy=False. array has copy=True by default.
+#    
+#    The main difference is that array (by default) will make a copy of the object, while asarray will not unless necessary.
 
     @property
     def translation(self):
@@ -50,6 +58,8 @@ class Pose(object):
     def transform_inverse(self, point):
         """Transform a point from this pose to world coordinates."""
         return self.get_rotation_matrix().T.dot(point - self.translation)
+        # R * x + t
+        # R^T * x + -R^T*t
 
     def transform_inverse_many(self, points):
         """Transform points from this pose to world coordinates."""
@@ -58,6 +68,7 @@ class Pose(object):
     def get_rotation_matrix(self):
         """Get rotation as a 3x3 matrix."""
         return cv2.Rodrigues(self.rotation)[0]
+        # Python: cv2.Rodrigues(src[, dst[, jacobian]]) → dst, jacobian¶
 
     def set_rotation_matrix(self, rotation_matrix, permissive=False):
         """Set rotation as a 3x3 matrix.
@@ -67,6 +78,7 @@ class Pose(object):
         >>> R = pose.get_rotation_matrix()
         >>> pose.set_rotation_matrix(R)
         >>> np.allclose(pose.rotation, [0., 1., 2.])
+        # 全部差不多
         True
 
         >>> pose.set_rotation_matrix([[3,-4, 1], [ 5, 3,-7], [-9, 2, 6]])
@@ -80,6 +92,7 @@ class Pose(object):
         ValueError: Determinant not 1
         """
         R = np.array(rotation_matrix, dtype=float)
+        # permissive 很宽容
         if not permissive:
           if not np.isclose(np.linalg.det(R), 1):
               raise ValueError("Determinant not 1")
@@ -90,6 +103,7 @@ class Pose(object):
     def get_origin(self):
         """The origin of the pose in world coordinates."""
         return -self.get_rotation_matrix().T.dot(self.translation)
+        # -R^T * t
 
     def set_origin(self, origin):
         """Set the origin of the pose in world coordinates.
@@ -142,6 +156,12 @@ class ShotMetadata(object):
         gps_dop (real): the GPS dop.
         gps_position (vector): the GPS position.
     """
+
+    # Dilution of precision (DOP), or geometric dilution of precision (GDOP),
+    # is a term used in satellite ..... Article on DOP and Trimble's program:
+    # Determining Local GPS Satellite Geometry Effects On Position Accuracy.
+    # Notes & GIF image on manually ...
+
 
     def __init__(self):
         self.orientation = None

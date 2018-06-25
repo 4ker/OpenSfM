@@ -1,14 +1,4 @@
-import os
 from subprocess import Popen, PIPE
-import datetime
-import dateutil.parser
-
-import cv2
-
-from opensfm import context
-from opensfm import geotag_from_gpx
-from opensfm import io
-
 
 def video_orientation(video_file):
     # Rotation
@@ -26,37 +16,6 @@ def video_orientation(video_file):
     else:
         orientation = 1
     return orientation
-
-
-def import_video_with_gpx(video_file, gpx_file, output_path, dx, dt=None, start_time=None, visual=False, image_description=None):
-
-    points = geotag_from_gpx.get_lat_lon_time(gpx_file)
-
-    orientation = video_orientation(video_file)
-
-    if start_time:
-        video_start_time = dateutil.parser.parse(start_time)
-    else:
-        try:
-            exifdate = Popen(['exiftool', '-CreateDate', '-b', video_file], stdout=PIPE).stdout.read()
-            video_start_time = datetime.datetime.strptime(exifdate,'%Y:%m:%d %H:%M:%S')
-        except:
-            print('Video recording timestamp not found. Using first GPS point time.')
-            video_start_time = points[0][0]
-        try:
-            duration = Popen(['exiftool', '-MediaDuration', '-b', video_file], stdout=PIPE).stdout.read()
-            video_duration = float(duration)
-            video_end_time = video_start_time + datetime.timedelta(seconds=video_duration)
-        except:
-            print('Video end time not found. Using last GPS point time.')
-            video_end_time = points[-1][0]
-
-    print('GPS track starts at: {}'.format(points[0][0]))
-    print('Video starts at: {}'.format(video_start_time))
-
-    # Extract video frames.
-    io.mkdir_p(output_path)
-    key_points = geotag_from_gpx.sample_gpx(points, dx, dt)
 
     cap = cv2.VideoCapture(video_file)
     image_files = []
